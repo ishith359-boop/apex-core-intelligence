@@ -2,7 +2,7 @@ import streamlit as st
 from google import genai
 from google.genai import types
 
-# Set professional branding layout
+# Set professional layout
 st.set_page_config(page_title="Apex AI", page_icon="⚙️", layout="centered")
 
 st.title("⚙️ Apex Core Intelligence")
@@ -12,14 +12,8 @@ st.caption("Custom Developer Interface | Powered by Gemini 3.6 Flash")
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- UPGRADE 1: Iron-Clad Vault Cache to Prevent Multi-Calls ---
-@st.cache_resource(show_spinner=False)
-def get_gemini_client(api_key):
-    # This function isolates the initial handshake so it only runs once per key change
-    return genai.Client(api_key=api_key)
-
-# --- UPGRADE 2: Authorization Lock Form ---
-# Putting inputs inside a form completely blocks Streamlit from auto-triggering on keypress
+# --- AUTHORIZATION FORM BLOCK ---
+# Wrapping this inside a formal container blocks Streamlit from auto-refreshing on every keystroke
 with st.sidebar.form("auth_form"):
     st.subheader("🔑 System Access")
     saved_key = st.session_state.get("api_key", "")
@@ -28,11 +22,10 @@ with st.sidebar.form("auth_form"):
     
     if submit_btn and api_input:
         st.session_state.api_key = api_input
-        # Wipe previous session state to clear any errors cleanly
-        st.session_state.messages = []
-        st.success("Key configuration saved locally!")
+        st.session_state.messages = [] # Clear history on fresh token login
+        st.success("Configuration loaded locally!")
 
-# Render Chat History Layout
+# Render History Blocks Cleanly
 for msg in st.session_state.messages:
     visual_role = "assistant" if msg["role"] == "model" else "user"
     with st.chat_message(visual_role):
@@ -42,18 +35,24 @@ for msg in st.session_state.messages:
 if not st.session_state.get("api_key"):
     st.info("System Standby. Paste your developer API key inside the sidebar vault panel and press Authenticate to initialize.")
 else:
-    # Handle Active Messaging Loop
-    if user_input := st.chat_input("Input command or query here..."):
+    # --- ISOLATED MESSAGE SUBMISSION BLOCK ---
+    # We use a standard text box form here to freeze background requests until you click "Send Command"
+    with st.form("message_form", clear_on_submit=True):
+        user_input = st.text_input("Input command or query here:", placeholder="Type your message here...")
+        send_btn = st.form_submit_button("Send Command")
+
+    if send_btn and user_input:
+        # Append User text directly to local history cache
         with st.chat_message("user"):
             st.write(user_input)
         st.session_state.messages.append({"role": "user", "text": user_input})
 
         try:
             with st.spinner("Apex engine computing data logs..."):
-                # Call cached client connection seamlessly
-                client = get_gemini_client(st.session_state.api_key)
+                # Spawn a standalone client handler cleanly for this query instance
+                client = genai.Client(api_key=st.session_state.api_key)
                 
-                # Reconstruct historical sequence strings cleanly for structural formatting
+                # Format previous history strings matching the strict schema expectations
                 history_logs = []
                 for m in st.session_state.messages[:-1]:
                     history_logs.append(types.Content(role=m["role"], parts=[types.Part.from_text(text=m["text"])]))
@@ -76,11 +75,15 @@ else:
                     )
                 )
                 
+                # Fetch text result strings over the designated active query stream
                 response = chat.send_message(user_input)
             
             with st.chat_message("assistant"):
                 st.write(response.text)
             st.session_state.messages.append({"role": "model", "text": response.text})
+            
+            # Force layout execution refresh step to keep visual order crisp
+            st.rerun()
             
         except Exception as e:
             st.error(f"System Error: {e}")
