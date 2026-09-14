@@ -1,7 +1,16 @@
+import sys
+import subprocess
+
+# Force the cloud server to install the correct library immediately on launch
+try:
+    from google import genai
+    from google.genai import types
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "google-genai"])
+    from google import genai
+    from google.genai import types
 
 import streamlit as st
-from google import genai
-from google.genai import types
 
 # Set professional branding layout
 st.set_page_config(page_title="Apex AI", page_icon="⚙️", layout="centered")
@@ -27,7 +36,6 @@ if "messages" not in st.session_state:
 
 # Display previous chat bubbles on the screen cleanly
 for msg in st.session_state.messages:
-    # Use 'user' or 'assistant' for Streamlit visual bubbles
     visual_role = "assistant" if msg["role"] == "model" else "user"
     with st.chat_message(visual_role):
         st.write(msg["text"])
@@ -44,7 +52,6 @@ Do not use any emojis or complex mathematical symbols in your responses.
 
 # 4. Handle User Input
 if user_input := st.chat_input("Input command or query here..."):
-    # Show user's message instantly in a nice bubble
     with st.chat_message("user"):
         st.write(user_input)
     st.session_state.messages.append({"role": "user", "text": user_input})
@@ -66,11 +73,10 @@ if user_input := st.chat_input("Input command or query here..."):
         )
         response = chat.send_message(user_input)
         
-        # Show the AI's response in a nice bubble
         with st.chat_message("assistant"):
             st.write(response.text)
-        # Store as 'model' so the Gemini API stays completely happy
         st.session_state.messages.append({"role": "model", "text": response.text})
         
     except Exception as e:
         st.error(f"System Error: {e}")
+
