@@ -1,30 +1,12 @@
 import streamlit as st
 from google import genai
 from google.genai import types
-from streamlit_lottie import st_lottie
-import requests
 
 # Set professional branding layout
 st.set_page_config(page_title="Apex AI", page_icon="⚙️", layout="centered")
 
-# Helper function to fetch clean animations safely
-def load_lottieurl(url: str):
-    r = requests.get(url)
-    if r.status_code != 200:
-        return None
-    return r.json()
-
-# Load a premium dark-themed mechanical loading pulse animation
-lottie_robot = load_lottieurl("https://lottiefiles.com")
-
-# Header Layout with Side-by-Side Animation Display
-col1, col2 = st.columns([0.8, 0.2])
-with col1:
-    st.title("⚙️ Apex Core Intelligence")
-    st.caption("Custom Developer Interface | Powered by Gemini 3.6 Flash")
-with col2:
-    if lottie_robot:
-        st_lottie(lottie_robot, speed=1, reverse=False, loop=True, quality="low", height=80, key="header_bot")
+st.title("⚙️ Apex Core Intelligence")
+st.caption("Custom Developer Interface | Powered by Gemini 3.6 Flash")
 
 # Authorization Section
 if "api_key" not in st.session_state:
@@ -52,6 +34,7 @@ for msg in st.session_state.messages:
 if not st.session_state.api_key:
     st.info("System Initialized. Please insert an active API key above to unlock the chat engine command bar.")
 else:
+    # Safely initialize the client and chat session ONCE to prevent hitting rate limits
     if st.session_state.chat_session is None:
         try:
             client = genai.Client(api_key=st.session_state.api_key)
@@ -82,7 +65,7 @@ else:
             st.write(user_input)
         st.session_state.messages.append({"role": "user", "text": user_input})
 
-        # Process response wrapped inside a visual loading animation spinner
+        # Process response wrapped inside a native loading spinner
         try:
             with st.spinner("Apex engine computing data logs..."):
                 response = st.session_state.chat_session.send_message(user_input)
