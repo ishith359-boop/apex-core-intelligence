@@ -6,7 +6,7 @@ from google.genai import types
 st.set_page_config(page_title="Apex AI", page_icon="⚙️", layout="centered")
 
 st.title("⚙️ Apex Core Intelligence")
-st.caption("Custom Developer Interface | Powered by Gemini 3.6 Flash")
+st.caption("Your personal  AI assistant | Powered by Gemini 3.6 Flash")
 
 # Initialize persistent session tracking structures
 if "messages" not in st.session_state:
@@ -18,12 +18,12 @@ with st.sidebar.form("auth_form"):
     st.subheader("🔑 System Access")
     saved_key = st.session_state.get("api_key", "")
     api_input = st.text_input("Authorization Key (API Key):", type="password", value=saved_key)
-    submit_btn = st.form_submit_button("Heating Engine")
+    submit_btn = st.form_submit_button("start Apex")
     
     if submit_btn and api_input:
         st.session_state.api_key = api_input
         st.session_state.messages = [] # Clear history on fresh token login
-        st.success("Configuration loaded locally!")
+        st.success("Apex is ready to go!")
 
 # Render History Blocks Cleanly
 for msg in st.session_state.messages:
@@ -33,13 +33,13 @@ for msg in st.session_state.messages:
 
 # Block execution loop if key hasn't been submitted explicitly via form button
 if not st.session_state.get("api_key"):
-    st.info("System Standby. Paste your developer API key inside the sidebar vault panel and press Authenticate to initialize.")
+    st.info("Apex standby, pls enter your API key to start Apex ")
 else:
     # --- ISOLATED MESSAGE SUBMISSION BLOCK ---
     # We use a standard text box form here to freeze background requests until you click "Send Command"
     with st.form("message_form", clear_on_submit=True):
-        user_input = st.text_input("Input command or query here:", placeholder="Type your message here...")
-        send_btn = st.form_submit_button(" just ask it ")
+        user_input = st.text_input("Input command or query here:", placeholder="Just ask it...")
+        send_btn = st.form_submit_button(" ENTER ")
 
     if send_btn and user_input:
         # Append User text directly to local history cache
@@ -48,7 +48,7 @@ else:
         st.session_state.messages.append({"role": "user", "text": user_input})
 
         try:
-            with st.spinner("Apex engine computing data logs..."):
+            with st.spinner("Thinking!"):
                 # Spawn a standalone client handler cleanly for this query instance
                 client = genai.Client(api_key=st.session_state.api_key)
                 
@@ -62,7 +62,7 @@ else:
                 You speak in a casual, direct, and universal Gen Z tone. Use terms like 'bro' naturally.
                 You are a peer, not a strict lecturer. You are an expert in coding assistance, 
                 3D modeling concepts, automotive mechanics, fitness advice, and creative hobbies. 
-                Keep your sentences relatively as needed , punchy,motivating,and highly scannable.
+                Keep your sentences relatively as long needed , punchy,motivating,and highly scannable.
                 Do not use any emojis or complex mathematical symbols in your responses.
                 """
                 
