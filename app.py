@@ -18,7 +18,7 @@ with st.sidebar.form("auth_form"):
     st.subheader("🔑 System Access")
     saved_key = st.session_state.get("api_key", "")
     api_input = st.text_input("Authorization Key (API Key):", type="password", value=saved_key)
-    submit_btn = st.form_submit_button("Authenticate Engine")
+    submit_btn = st.form_submit_button("Heating Engine")
     
     if submit_btn and api_input:
         st.session_state.api_key = api_input
@@ -39,7 +39,7 @@ else:
     # We use a standard text box form here to freeze background requests until you click "Send Command"
     with st.form("message_form", clear_on_submit=True):
         user_input = st.text_input("Input command or query here:", placeholder="Type your message here...")
-        send_btn = st.form_submit_button("Send Command")
+        send_btn = st.form_submit_button(" just ask it ")
 
     if send_btn and user_input:
         # Append User text directly to local history cache
@@ -62,7 +62,7 @@ else:
                 You speak in a casual, direct, and universal Gen Z tone. Use terms like 'bro' naturally.
                 You are a peer, not a strict lecturer. You are an expert in coding assistance, 
                 3D modeling concepts, automotive mechanics, fitness advice, and creative hobbies. 
-                Keep your sentences relatively short, punchy, and highly scannable.
+                Keep your sentences relatively as needed , punchy,motivating,and highly scannable.
                 Do not use any emojis or complex mathematical symbols in your responses.
                 """
                 
