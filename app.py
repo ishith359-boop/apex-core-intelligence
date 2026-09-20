@@ -8,7 +8,7 @@ from PIL import Image
 st.set_page_config(page_title="Apex AI", page_icon="⚙️", layout="centered")
 
 st.title("⚙️ Apex Core Intelligence")
-st.caption("Custom Core Framework | Powered by Gemini 3.6 & 3.1 Art Engine")
+st.caption("Custom Core Framework | Powered by Gemini 3.6 & Imagen Art Engine")
 
 # Initialize persistent session tracking structures
 if "messages" not in st.session_state:
@@ -41,7 +41,7 @@ if not st.session_state.get("api_key"):
 else:
     # --- ISOLATED MESSAGE SUBMISSION BLOCK ---
     with st.form("message_form", clear_on_submit=True):
-        user_input = st.text_input("Command Console:", placeholder="Type a message, or fire up /imagine [prompt] to synthesize 3D art...")
+        user_input = tk_input = st.text_input("Command Console:", placeholder="Type a message, or fire up /imagine [prompt] to synthesize 3D art...")
         send_btn = st.form_submit_button("🚀 Run Command")
 
     if send_btn and user_input:
@@ -62,9 +62,9 @@ else:
                     st.warning("You forgot the prompt, bro! Give me something to render after the /imagine command.")
                 else:
                     with st.spinner("Apex image engine is cooking pixels in the lab..."):
-                        # Call the official image generation endpoint
+                        # FIXED: Using the official developer platform model ID
                         result = client.models.generate_images(
-                            model="gemini-3.1-flash-image",
+                            model="imagen-3.0-generate-002",
                             prompt=image_prompt,
                             config=types.GenerateImagesConfig(
                                 number_of_images=1,
