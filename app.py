@@ -8,13 +8,13 @@ from PIL import Image
 st.set_page_config(page_title="Apex AI", page_icon="⚙️", layout="centered")
 
 st.title("⚙️ Apex Core Intelligence")
-st.caption("Custom Core Framework | Powered by Gemini 3.6 & Imagen Art Engine")
+st.caption("Custom Core Framework | Powered by Gemini 3.6 & Imagen 3")
 
 # Initialize persistent session tracking structures
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- AUTHORIZATION FORM BLOCK (Polished and Creative UI) ---
+# --- AUTHORIZATION SIDEBAR BLOCK ---
 with st.sidebar.form("auth_form"):
     st.subheader("⚡ Ignition Vault")
     saved_key = st.session_state.get("api_key", "")
@@ -41,7 +41,6 @@ if not st.session_state.get("api_key"):
 else:
     # --- ISOLATED MESSAGE SUBMISSION BLOCK ---
     with st.form("message_form", clear_on_submit=True):
-        # FIXED: Removed the stray variable assignments completely
         user_input = st.text_input("Command Console:", placeholder="Type a message, or fire up /imagine [prompt] to synthesize 3D art...")
         send_btn = st.form_submit_button("🚀 Run Command")
 
@@ -52,8 +51,8 @@ else:
         st.session_state.messages.append({"role": "user", "text": user_input})
 
         try:
-            # Initialize the global Gemini Client
-            client = genai.Client(api_key=st.session_state.api_key)
+            # Initialize the global Gemini Client strictly in Developer Mode
+            client = genai.Client(apiKey=st.session_state.api_key)
 
             # --- MODE 1: IMAGE GENERATION VIA /IMAGINE COMMAND ---
             if user_input.strip().lower().startswith("/imagine"):
@@ -63,7 +62,7 @@ else:
                     st.warning("You forgot the prompt, bro! Give me something to render after the /imagine command.")
                 else:
                     with st.spinner("Apex image engine is cooking pixels in the lab..."):
-                        # Using the correct developer platform model ID
+                        # Calling the verified developer-tier image engine model
                         result = client.models.generate_images(
                             model="imagen-3.0-generate-002",
                             prompt=image_prompt,
@@ -74,12 +73,12 @@ else:
                             )
                         )
                         
-                        # Process bytes directly into an image
+                        # Process bytes directly into an image object
                         for generated_image in result.generated_images:
                             image_bytes = generated_image.image.image_bytes
                             image = Image.open(BytesIO(image_bytes))
                             
-                            # Render instantly in chat
+                            # Render instantly in chat layout
                             with st.chat_message("assistant"):
                                 st.image(image, caption=image_prompt)
                             
@@ -94,7 +93,7 @@ else:
             # --- MODE 2: STANDARD TEXT CHAT CONVERSATION ---
             else:
                 with st.spinner("Apex processor compiling data logs..."):
-                    # Format previous history strings matching strict tags
+                    # Format previous history strings matching strict developer tags
                     history_logs = []
                     for m in st.session_state.messages[:-1]:
                         if m.get("is_image"):
