@@ -51,8 +51,8 @@ else:
         st.session_state.messages.append({"role": "user", "text": user_input})
 
         try:
-            # Initialize the global Gemini Client strictly in Developer Mode
-            client = genai.Client(apiKey=st.session_state.api_key)
+            # FIXED: Changed 'apiKey' to the correct lowercase syntax 'api_key'
+            client = genai.Client(api_key=st.session_state.api_key)
 
             # --- MODE 1: IMAGE GENERATION VIA /IMAGINE COMMAND ---
             if user_input.strip().lower().startswith("/imagine"):
