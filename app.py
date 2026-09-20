@@ -14,6 +14,9 @@ st.caption("Custom Core Framework | Powered by Gemini 3.6 & Imagen 3")
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+if "chat_session" not in st.session_state:
+    st.session_state.chat_session = None
+
 # --- AUTHORIZATION SIDEBAR BLOCK ---
 with st.sidebar.form("auth_form"):
     st.subheader("⚡ Ignition Vault")
@@ -24,6 +27,7 @@ with st.sidebar.form("auth_form"):
     if submit_btn and api_input:
         st.session_state.api_key = api_input
         st.session_state.messages = [] # Clear history on fresh token login
+        st.session_state.chat_session = None # Reset session object
         st.success("Core link established. Systems are fully locked and loaded, bro!")
 
 # Render History Blocks Cleanly
@@ -51,7 +55,7 @@ else:
         st.session_state.messages.append({"role": "user", "text": user_input})
 
         try:
-            # FIXED: Changed 'apiKey' to the correct lowercase syntax 'api_key'
+            # Initialize the global Gemini Client strictly in Developer Mode
             client = genai.Client(api_key=st.session_state.api_key)
 
             # --- MODE 1: IMAGE GENERATION VIA /IMAGINE COMMAND ---
@@ -93,32 +97,26 @@ else:
             # --- MODE 2: STANDARD TEXT CHAT CONVERSATION ---
             else:
                 with st.spinner("Apex processor compiling data logs..."):
-                    # Format previous history strings matching strict developer tags
-                    history_logs = []
-                    for m in st.session_state.messages[:-1]:
-                        if m.get("is_image"):
-                            continue
-                        history_logs.append(types.Content(role=m["role"], parts=[types.Part.from_text(text=m["text"])]))
-                    
-                    personality_instruction = """
-                    You are a highly capable, adaptive, and friendly AI collaborator. 
-                    You speak in a casual, direct, and universal Gen Z tone. Use terms like 'bro' naturally.
-                    You are a peer, not a strict lecturer. You are an expert in coding assistance, 
-                    3D modeling concepts, automotive mechanics, fitness advice, and creative hobbies. 
-                    Keep your sentences relatively short, punchy, and highly scannable.
-                    Do not use any emojis or complex mathematical symbols in your responses.
-                    """
-                    
-                    chat = client.chats.create(
-                        model="gemini-3.6-flash",
-                        history=history_logs,
-                        config=types.GenerateContentConfig(
-                            system_instruction=personality_instruction,
-                            temperature=0.7,
+                    # Instantiating the client chat object ONE TIME to avoid enterprise tracking crashes
+                    if st.session_state.chat_session is None:
+                        personality_instruction = """
+                        You are a highly capable, adaptive, and friendly AI collaborator. 
+                        You speak in a casual, direct, and universal Gen Z tone. Use terms like 'bro' naturally.
+                        You are a peer, not a strict lecturer. You are an expert in coding assistance, 
+                        3D modeling concepts, automotive mechanics, fitness advice, and creative hobbies. 
+                        Keep your sentences relatively short, punchy, and highly scannable.
+                        Do not use any emojis or complex mathematical symbols in your responses.
+                        """
+                        st.session_state.chat_session = client.chats.create(
+                            model="gemini-3.6-flash",
+                            config=types.GenerateContentConfig(
+                                system_instruction=personality_instruction,
+                                temperature=0.7,
+                            )
                         )
-                    )
                     
-                    response = chat.send_message(user_input)
+                    # Native developer-tier message passing method
+                    response = st.session_state.chat_session.send_message(user_input)
                 
                 with st.chat_message("assistant"):
                     st.write(response.text)
