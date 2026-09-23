@@ -57,13 +57,6 @@ with col2:
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# FIXED: Persistently lock both the client and the chat session together in memory
-if "client" not in st.session_state:
-    st.session_state.client = None
-
-if "chat_session" not in st.session_state:
-    st.session_state.chat_session = None
-
 # --- SECURE CREDENTIALS FORM ---
 with st.sidebar.form("auth_form"):
     st.subheader("🚀 Ignition Sequence")
@@ -73,9 +66,7 @@ with st.sidebar.form("auth_form"):
     
     if submit_btn and api_input:
         st.session_state.api_key = api_input
-        st.session_state.messages = []  
-        st.session_state.client = None  # Force fresh connection on key change
-        st.session_state.chat_session = None  
+        st.session_state.messages = []  # Clear history logs on fresh token reload
         st.success("Warp drive linked. Core processing systems online!")
 
 # Render Historical Chat Logs Cleanly
@@ -102,9 +93,8 @@ else:
         st.session_state.messages.append({"role": "user", "text": user_input})
 
         try:
-            # FIXED: Safely instantiate the Client inside session state so it NEVER closes down
-            if st.session_state.client is None:
-                st.session_state.client = genai.Client(api_key=st.session_state.api_key)
+            # FIXED: Always spin up a brand new, fully active Client instance inside the execution path
+            client = genai.Client(api_key=st.session_state.api_key)
 
             # --- MODE 1: IMAGE GENERATION VIA /IMAGINE COMMAND ---
             if user_input.strip().lower().startswith("/imagine"):
@@ -114,7 +104,7 @@ else:
                     st.warning("Execution Terminated: Missing graphic parameters.")
                 else:
                     with st.spinner("Synthesizing graphic matrix pixels..."):
-                        result = st.session_state.client.models.generate_images(
+                        result = client.models.generate_images(
                             model="imagen-3.0-generate-002",
                             prompt=image_prompt,
                             config=types.GenerateImagesConfig(
@@ -141,23 +131,34 @@ else:
             # --- MODE 2: PERSISTENT TEXT CONVERSATION ENGINE ---
             else:
                 with st.spinner("Decrypting cosmic frequencies..."):
-                    if st.session_state.chat_session is None:
-                        professional_instruction = """
-                        You are Apex Core Intelligence, a professional, high-performance space station computer terminal. 
-                        You speak in a neutral, technical, objective, and highly professional tone. 
-                        Do not use casual terms, slang, or emojis. 
-                        You are an expert in software development, 3D asset workflows, mechanical engineering, and physical performance architectures. 
-                        Provide information using concise, clear formatting and short sentences.
-                        """
-                        st.session_state.chat_session = st.session_state.client.chats.create(
-                            model="gemini-3.6-flash",
-                            config=types.GenerateContentConfig(
-                                system_instruction=professional_instruction,
-                                temperature=0.7,
-                            )
-                        )
+                    # FIXED: Instead of an unpredictable chat session object, we rebuild the developer-tier content history logs on each prompt.
+                    # This ensures the active client never drops out or raises a closed channel exception.
+                    history_logs = []
+                    for m in st.session_state.messages[:-1]:
+                        if m.get("is_image"):
+                            continue
+                        history_logs.append(types.Content(role=m["role"], parts=[types.Part.from_text(text=m["text"])]))
                     
-                    response = st.session_state.chat_session.send_message(user_input)
+                    # Append the current active user message to the text payload logs
+                    history_logs.append(types.Content(role="user", parts=[types.Part.from_text(text=user_input)]))
+                    
+                    professional_instruction = """
+                    You are Apex Core Intelligence, a professional, high-performance space station computer terminal. 
+                    You speak in a neutral, technical, objective, and highly professional tone. 
+                    Do not use casual terms, slang, or emojis. 
+                    You are an expert in software development, 3D asset workflows, mechanical engineering, and physical performance architectures. 
+                    Provide information using concise, clear formatting and short sentences.
+                    """
+                    
+                    # Generate the text completion cleanly using our active client handle
+                    response = client.models.generate_content(
+                        model="gemini-3.6-flash",
+                        contents=history_logs,
+                        config=types.GenerateContentConfig(
+                            system_instruction=professional_instruction,
+                            temperature=0.7,
+                        )
+                    )
                 
                 with st.chat_message("assistant"):
                     st.write(response.text)
