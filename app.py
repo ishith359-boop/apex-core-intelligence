@@ -4,69 +4,68 @@ from google.genai import types
 from io import BytesIO
 from PIL import Image
 
-# Set professional layout with a sharp tech icon
-st.set_page_config(page_title="Apex AI", page_icon="⚙️", layout="centered")
+# Initialize production interface configurations
+st.set_page_config(page_title="Apex Systems", page_icon="⚙️", layout="centered")
 
 st.title("⚙️ Apex Core Intelligence")
-st.caption("Custom Core Framework | Powered by Gemini 3.6 & Imagen 3")
+st.caption("Secure Developer Terminal | Model Status: Active")
 
-# Initialize persistent session tracking structures
+# Initialize persistent tracking structures for state management
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 if "chat_session" not in st.session_state:
     st.session_state.chat_session = None
 
-# --- AUTHORIZATION SIDEBAR BLOCK ---
+# --- SECURE CREDENTIALS FORM ---
 with st.sidebar.form("auth_form"):
-    st.subheader("⚡ Ignition Vault")
+    st.subheader("🔒 System Authentication")
     saved_key = st.session_state.get("api_key", "")
-    api_input = st.text_input("Plug In Your Core Key (API Key):", type="password", value=saved_key)
-    submit_btn = st.form_submit_button("🔥 Boot the Core")
+    api_input = st.text_input("Developer Authorization Token (API Key):", type="password", value=saved_key)
+    submit_btn = st.form_submit_button("Initialize Engine")
     
     if submit_btn and api_input:
         st.session_state.api_key = api_input
-        st.session_state.messages = [] # Clear history on fresh token login
-        st.session_state.chat_session = None # Reset session object
-        st.success("Core link established. Systems are fully locked and loaded, bro!")
+        st.session_state.messages = []  # Reset thread on new initialization
+        st.session_state.chat_session = None  # Clear active session cache
+        st.success("Authorization token verified. System initialized successfully.")
 
-# Render History Blocks Cleanly
+# Render Historical Chat Logs Cleanly
 for msg in st.session_state.messages:
     visual_role = "assistant" if msg["role"] == "model" else "user"
     with st.chat_message(visual_role):
         if msg.get("is_image"):
-            st.image(msg["text"], caption=msg.get("prompt", "Rendered Asset"))
+            st.image(msg["text"], caption=msg.get("prompt", "Generated Data Asset"))
         else:
             st.write(msg["text"])
 
-# Creative Standby Notification if the engine isn't fueled yet
+# System Offline Status Notification Block
 if not st.session_state.get("api_key"):
-    st.info("Core Engine is offline, bro. Drop your access key into the Ignition Vault on the left sidebar and smash 'Boot the Core' to wake it up!")
+    st.info("System Status: Offline. Please insert a valid developer authorization token in the authentication panel to unlock terminal operations.")
 else:
     # --- ISOLATED MESSAGE SUBMISSION BLOCK ---
     with st.form("message_form", clear_on_submit=True):
-        user_input = st.text_input("Command Console:", placeholder="Type a message, or fire up /imagine [prompt] to synthesize 3D art...")
-        send_btn = st.form_submit_button("🚀 Run Command")
+        user_input = st.text_input("Terminal Command:", placeholder="Enter computational command or use /imagine [prompt] for asset generation...")
+        send_btn = st.form_submit_button("Execute Command")
 
     if send_btn and user_input:
-        # Append User text directly to local history cache
+        # Append query natively to thread logs
         with st.chat_message("user"):
             st.write(user_input)
         st.session_state.messages.append({"role": "user", "text": user_input})
 
         try:
-            # Initialize the global Gemini Client strictly in Developer Mode
+            # Initialize Developer-tier GenAI client
             client = genai.Client(api_key=st.session_state.api_key)
 
-            # --- MODE 1: IMAGE GENERATION VIA /IMAGINE COMMAND ---
+            # --- MODE 1: NATIVE DEVELOPER-TIER IMAGE GENERATION ---
             if user_input.strip().lower().startswith("/imagine"):
                 image_prompt = user_input.replace("/imagine", "").strip()
                 
                 if not image_prompt:
-                    st.warning("You forgot the prompt, bro! Give me something to render after the /imagine command.")
+                    st.warning("Execution Halted: Prompt missing for generation command.")
                 else:
-                    with st.spinner("Apex image engine is cooking pixels in the lab..."):
-                        # Calling the verified developer-tier image engine model
+                    with st.spinner("Processing image generation request..."):
                         result = client.models.generate_images(
                             model="imagen-3.0-generate-002",
                             prompt=image_prompt,
@@ -77,16 +76,16 @@ else:
                             )
                         )
                         
-                        # Process bytes directly into an image object
+                        # Process image bytes output safely
                         for generated_image in result.generated_images:
                             image_bytes = generated_image.image.image_bytes
                             image = Image.open(BytesIO(image_bytes))
                             
-                            # Render instantly in chat layout
+                            # Render directly in the active application window
                             with st.chat_message("assistant"):
                                 st.image(image, caption=image_prompt)
                             
-                            # Cache the image data into local state tracking
+                            # Append structural tracking values into session state logs
                             st.session_state.messages.append({
                                 "role": "model", 
                                 "text": image, 
@@ -94,36 +93,35 @@ else:
                                 "prompt": image_prompt
                             })
                             
-            # --- MODE 2: STANDARD TEXT CHAT CONVERSATION ---
+            # --- MODE 2: PERSISTENT TEXT CONVERSATION ENGINE ---
             else:
-                with st.spinner("Apex processor compiling data logs..."):
-                    # Instantiating the client chat object ONE TIME to avoid enterprise tracking crashes
+                with st.spinner("Compiling neural framework data..."):
+                    # Instantiating the client chat object ONCE to prevent enterprise platform tracking crashes
                     if st.session_state.chat_session is None:
-                        personality_instruction = """
-                        You are a highly capable, adaptive, and friendly AI collaborator. 
-                        You speak in a casual, direct, and universal Gen Z tone. Use terms like 'bro' naturally.
-                        You are a peer, not a strict lecturer. You are an expert in coding assistance, 
-                        3D modeling concepts, automotive mechanics, fitness advice, and creative hobbies. 
-                        Keep your sentences relatively short, punchy, and highly scannable.
-                        Do not use any emojis or complex mathematical symbols in your responses.
+                        professional_instruction = """
+                        You are Apex Core Intelligence, a professional, high-performance AI collaborator. 
+                        You speak in a neutral, technical, objective, and highly professional tone. 
+                        Do not use casual terms, slang, or emojis. 
+                        You are an expert in software development, 3D asset workflows, mechanical engineering, and physical performance architectures. 
+                        Provide information using concise, clear formatting and short sentences.
                         """
                         st.session_state.chat_session = client.chats.create(
                             model="gemini-3.6-flash",
                             config=types.GenerateContentConfig(
-                                system_instruction=personality_instruction,
+                                system_instruction=professional_instruction,
                                 temperature=0.7,
                             )
                         )
                     
-                    # Native developer-tier message passing method
+                    # Core Developer-tier message request passing
                     response = st.session_state.chat_session.send_message(user_input)
                 
                 with st.chat_message("assistant"):
                     st.write(response.text)
                 st.session_state.messages.append({"role": "model", "text": response.text})
             
-            # Force layout execution refresh step to keep visual order crisp
+            # Refresh layout pipeline cleanly to maintain alignment
             st.rerun()
             
         except Exception as e:
-            st.error(f"System Glitch: {e}")
+            st.error(f"System Execution Glitch: {e}")
