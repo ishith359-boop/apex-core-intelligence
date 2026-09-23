@@ -7,16 +7,25 @@ from PIL import Image
 # Initialize space mission configurations
 st.set_page_config(page_title="Apex Space Core", page_icon="🌌", layout="centered")
 
-# --- HIGH-TECH SPACE STYLING (CSS INJECTION) ---
+# --- HIGH-TECH NATIVE SPACE WALLPAPER (CSS INJECTION) ---
 st.markdown("""
 <style>
-    /* Deep space cosmic gradient background */
-    .stApp {
-        background: linear-gradient(135deg, #060814 0%, #0b112c 50%, #1a0b2e 100%) !important;
-        color: #e0e6ed !important;
+    /* Injects a high-res space wallpaper with a smooth dark tint mask for readability */
+    [data-testid="stAppViewContainer"] {
+        background-image: linear-gradient(rgba(6, 8, 20, 0.85), rgba(26, 11, 46, 0.85)), 
+                          url("https://unsplash.com");
+        background-size: cover !important;
+        background-position: center center !important;
+        background-repeat: no-repeat !important;
+        background-attachment: fixed !important;
     }
     
-    /* Neon glow effect for main headers and container outlines */
+    /* Transparent header to let the background stretch completely */
+    [data-testid="stHeader"] {
+        background: rgba(0,0,0,0) !important;
+    }
+    
+    /* Neon glow effect for titles */
     h1 {
         color: #00f2fe !important;
         text-shadow: 0 0 10px #00f2fe, 0 0 20px #00f2fe;
@@ -35,7 +44,7 @@ st.markdown("""
         box-shadow: 0 0 5px rgba(0, 242, 254, 0.3);
     }
     
-    /* Custom spacing loops for side graphics */
+    /* Custom formatting for side graphics */
     .space-banner {
         border-radius: 12px;
         box-shadow: 0 0 15px #7f00ff;
@@ -93,7 +102,7 @@ else:
         st.session_state.messages.append({"role": "user", "text": user_input})
 
         try:
-            # FIXED: Always spin up a brand new, fully active Client instance inside the execution path
+            # Generate fresh active client instance inside execution loop
             client = genai.Client(api_key=st.session_state.api_key)
 
             # --- MODE 1: IMAGE GENERATION VIA /IMAGINE COMMAND ---
@@ -131,15 +140,13 @@ else:
             # --- MODE 2: PERSISTENT TEXT CONVERSATION ENGINE ---
             else:
                 with st.spinner("Decrypting cosmic frequencies..."):
-                    # FIXED: Instead of an unpredictable chat session object, we rebuild the developer-tier content history logs on each prompt.
-                    # This ensures the active client never drops out or raises a closed channel exception.
+                    # Dynamically piece history strings together
                     history_logs = []
                     for m in st.session_state.messages[:-1]:
                         if m.get("is_image"):
                             continue
                         history_logs.append(types.Content(role=m["role"], parts=[types.Part.from_text(text=m["text"])]))
                     
-                    # Append the current active user message to the text payload logs
                     history_logs.append(types.Content(role="user", parts=[types.Part.from_text(text=user_input)]))
                     
                     professional_instruction = """
@@ -150,7 +157,6 @@ else:
                     Provide information using concise, clear formatting and short sentences.
                     """
                     
-                    # Generate the text completion cleanly using our active client handle
                     response = client.models.generate_content(
                         model="gemini-3.6-flash",
                         contents=history_logs,
